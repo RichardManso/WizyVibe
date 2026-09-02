@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 interface HeaderProps {
   showSearch?: boolean;
@@ -10,6 +11,7 @@ export const Header: React.FC<HeaderProps> = () => {
   const navRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const isApp = location.pathname === '/app';
+  const { isAuthenticated, user, login, logout } = useAuth();
 
   useEffect(() => {
     // Animation d'apparition
@@ -56,8 +58,15 @@ export const Header: React.FC<HeaderProps> = () => {
           <Link to="/app" className="btn-gradient px-6 py-2 rounded-xl text-sm font-medium transition-transform hover:scale-[1.02] shadow-lg shadow-accent/20">
             Ouvrir le Lexique
           </Link>
+        ) : isAuthenticated && user ? (
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-white/80">{user.name}</span>
+            <button onClick={logout} className="w-8 h-8 rounded-full overflow-hidden border border-white/20 hover:border-accent transition-colors" title="Se déconnecter">
+              <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+            </button>
+          </div>
         ) : (
-          <button className="bg-white/10 text-white px-6 py-2 rounded-xl text-sm font-medium transition-colors hover:bg-white/20 border border-white/5">
+          <button onClick={login} className="bg-white/10 text-white px-6 py-2 rounded-xl text-sm font-medium transition-colors hover:bg-white/20 border border-white/5">
             Se connecter
           </button>
         )}

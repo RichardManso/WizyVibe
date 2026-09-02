@@ -18,6 +18,7 @@ export interface EffectItem {
   css?: string;
   reactCode?: string;
   parameters?: EffectParameter[];
+  isPremium?: boolean;
 }
 
 export const CATEGORIES = ['Tous', '✨ Nouveautés', 'UI Components', 'Interactions', 'Data Display', 'Feedback', 'Navigation'];
@@ -70,6 +71,7 @@ export const ShimmerButton = ({ children, onClick }) => {
     name: "Carte Holographique",
     description: "Carte en verre dépoli avec bordure lumineuse et reflet asymétrique.",
     category: "Data Display",
+    isPremium: true,
     tailwindClasses: "w-64 h-40 bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex items-center justify-center relative overflow-hidden glass-card",
     css: `
       .glass-card::before {
@@ -168,6 +170,7 @@ export const MagneticInput = ({ placeholder }) => {
     name: "Révélation Texte (GSAP)",
     description: "Animation d'apparition fluide des mots utilisant GSAP ScrollTrigger.",
     category: "Animations",
+    isPremium: true,
     parameters: [
       { id: "duration", label: "Durée (s)", type: "range", defaultValue: 0.8, min: 0.2, max: 2, step: 0.1 },
       { id: "stagger", label: "Décalage (s)", type: "range", defaultValue: 0.05, min: 0.01, max: 0.2, step: 0.01 },

@@ -4,14 +4,19 @@ import { Header } from '../components/Header';
 import { EffectCard } from '../components/EffectCard';
 import { InspectorDrawer } from '../components/InspectorDrawer';
 import { Toast } from '../components/Toast';
+import { AuthModal } from '../components/AuthModal';
 import { Footer } from './Landing';
 import { effectRegistry, CATEGORIES } from '../data/registry';
 import type { EffectItem } from '../data/registry';
+import { useAuth } from '../context/AuthContext';
 
 export const LexiconApp: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [inspectedEffect, setInspectedEffect] = useState<EffectItem | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  const { isAuthenticated } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Tous');
@@ -22,6 +27,14 @@ export const LexiconApp: React.FC = () => {
       navigator.clipboard.writeText(effect.tailwindClasses);
       setToastMessage(`Copié: ${effect.name}`);
       setShowToast(true);
+    }
+  };
+
+  const handleInspect = (effect: EffectItem) => {
+    if (effect.isPremium && !isAuthenticated) {
+      setShowAuthModal(true);
+    } else {
+      setInspectedEffect(effect);
     }
   };
 
@@ -92,7 +105,7 @@ export const LexiconApp: React.FC = () => {
                   key={effect.id} 
                   effect={effect} 
                   onCopy={handleCopy} 
-                  onInspect={(e) => setInspectedEffect(e)} 
+                  onInspect={handleInspect} 
                 />
               ))}
             </div>
@@ -111,6 +124,11 @@ export const LexiconApp: React.FC = () => {
         effect={inspectedEffect} 
         isOpen={!!inspectedEffect} 
         onClose={() => setInspectedEffect(null)} 
+      />
+
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
       />
 
       <Toast 

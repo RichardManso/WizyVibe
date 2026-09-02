@@ -15,6 +15,12 @@ export const EffectCard: React.FC<EffectCardProps> = ({ effect, onCopy, onInspec
         className="h-64 bg-surface relative flex items-center justify-center p-8 overflow-hidden cursor-pointer border-b border-white/5"
         onClick={() => onInspect(effect)}
       >
+        {effect.isPremium && (
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 text-black px-3 py-1 rounded-full shadow-[0_0_15px_rgba(251,191,36,0.3)] border border-yellow-300/50">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <span className="text-[10px] font-bold tracking-wider uppercase">PRO</span>
+          </div>
+        )}
         {effect.css && <style>{effect.css}</style>}
         <div className="w-full h-full flex items-center justify-center relative">
           <div className="absolute inset-0 bg-grid-dark opacity-30 pointer-events-none"></div>
