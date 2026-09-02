@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Header } from '../components/Header';
 import { EffectCard } from '../components/EffectCard';
@@ -7,6 +7,7 @@ import { Toast } from '../components/Toast';
 import { AuthModal } from '../components/AuthModal';
 import { Footer } from './Landing';
 import { effectRegistry, CATEGORIES } from '../data/registry';
+import { supabase } from '../lib/supabase';
 import type { EffectItem } from '../data/registry';
 import { useAuth } from '../context/AuthContext';
 
@@ -14,15 +15,38 @@ export const LexiconApp: React.FC = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [showToast, setShowToast] = useState(false);
   const [inspectedEffect, setInspectedEffect] = useState<EffectItem | null>(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [effects, setEffects] = useState<EffectItem[]>(effectRegistry);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthModalOpen, closeAuthModal, openAuthModal } = useAuth();
+
+  useEffect(() => {
+    const fetchEffects = async () => {
+      try {
+        if (!import.meta.env.VITE_SUPABASE_URL) {
+          throw new Error("Supabase non configuré");
+        }
+        const { data, error } = await supabase.from('effects').select('*');
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          setEffects(data as EffectItem[]);
+        }
+      } catch (err) {
+        console.log("Fallback au registre local :", err);
+        // Fallback to local registry already set in initial state
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEffects();
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('Tous');
 
   const handleCopy = (id: string) => {
-    const effect = effectRegistry.find(e => e.id === id);
+    const effect = effects.find(e => e.id === id);
     if (effect) {
       navigator.clipboard.writeText(effect.tailwindClasses);
       setToastMessage(`Copié: ${effect.name}`);
@@ -32,13 +56,13 @@ export const LexiconApp: React.FC = () => {
 
   const handleInspect = (effect: EffectItem) => {
     if (effect.isPremium && !isAuthenticated) {
-      setShowAuthModal(true);
+      openAuthModal();
     } else {
       setInspectedEffect(effect);
     }
   };
 
-  const filteredEffects = effectRegistry.filter((effect) => {
+  const filteredEffects = effects.filter((effect) => {
     const matchesSearch = effect.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           effect.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = activeCategory === 'Tous' || 
@@ -98,7 +122,12 @@ export const LexiconApp: React.FC = () => {
           <span className="text-sm font-medium text-dark/40">{filteredEffects.length} composants</span>
         </div>
         <div className="max-w-6xl mx-auto min-h-[40vh]">
-          {filteredEffects.length > 0 ? (
+          {isLoading ? (
+            <div className="w-full py-20 flex flex-col items-center justify-center text-dark/40 bg-white/50 rounded-3xl border border-black/5">
+              <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p>Chargement du lexique...</p>
+            </div>
+          ) : filteredEffects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredEffects.map((effect) => (
                 <EffectCard 
@@ -127,8 +156,8 @@ export const LexiconApp: React.FC = () => {
       />
 
       <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
+        isOpen={isAuthModalOpen} 
+        onClose={closeAuthModal} 
       />
 
       <Toast 

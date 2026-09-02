@@ -11,7 +11,7 @@ export const Header: React.FC<HeaderProps> = () => {
   const navRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const isApp = location.pathname === '/app';
-  const { isAuthenticated, user, login, logout } = useAuth();
+  const { isAuthenticated, user, logout, openAuthModal } = useAuth();
 
   useEffect(() => {
     // Animation d'apparition
@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = () => {
             </button>
           </div>
         ) : (
-          <button onClick={login} className="bg-white/10 text-white px-6 py-2 rounded-xl text-sm font-medium transition-colors hover:bg-white/20 border border-white/5">
+          <button onClick={openAuthModal} className="bg-white/10 text-white px-6 py-2 rounded-xl text-sm font-medium transition-colors hover:bg-white/20 border border-white/5">
             Se connecter
           </button>
         )}
