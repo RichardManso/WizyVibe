@@ -17,6 +17,9 @@ function App() {
   const [showToast, setShowToast] = useState(false);
   const [inspectedEffect, setInspectedEffect] = useState<EffectItem | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('Tous');
+
   const handleCopy = (id: string) => {
     const effect = effectRegistry.find(e => e.id === id);
     if (effect) {
@@ -25,6 +28,15 @@ function App() {
       setShowToast(true);
     }
   };
+
+  const filteredEffects = effectRegistry.filter((effect) => {
+    const matchesSearch = effect.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          effect.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = activeCategory === 'Tous' || 
+                            activeCategory === '✨ Nouveautés' || 
+                            effect.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="min-h-screen bg-background relative text-dark">
@@ -35,24 +47,38 @@ function App() {
         <rect width="100%" height="100%" filter="url(#noiseFilter)" />
       </svg>
 
-      <Header />
+      <Header 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
+      />
       
       <div className="bg-background px-8 md:px-16 pb-20">
         <div className="max-w-6xl mx-auto flex items-center justify-between mb-8">
-          <h2 className="text-xl font-semibold text-dark">Catégories populaires</h2>
-          <a href="#" className="text-sm font-medium text-dark/60 hover:text-dark transition-colors flex items-center gap-1">Voir tout &rarr;</a>
+          <h2 className="text-xl font-semibold text-dark">
+            {activeCategory === 'Tous' ? 'Catégories populaires' : activeCategory}
+          </h2>
+          <span className="text-sm font-medium text-dark/40">{filteredEffects.length} composants</span>
         </div>
         <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {effectRegistry.map((effect) => (
-              <EffectCard 
-                key={effect.id} 
-                effect={effect} 
-                onCopy={handleCopy} 
-                onInspect={(e) => setInspectedEffect(e)} 
-              />
-            ))}
-          </div>
+          {filteredEffects.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filteredEffects.map((effect) => (
+                <EffectCard 
+                  key={effect.id} 
+                  effect={effect} 
+                  onCopy={handleCopy} 
+                  onInspect={(e) => setInspectedEffect(e)} 
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="w-full py-20 flex flex-col items-center justify-center text-dark/40">
+              <div className="text-4xl mb-4">🔍</div>
+              <p>Aucun composant trouvé pour "{searchQuery}"</p>
+            </div>
+          )}
         </div>
       </div>
 
