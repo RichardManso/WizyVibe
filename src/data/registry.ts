@@ -1,3 +1,14 @@
+export interface EffectParameter {
+  id: string;
+  label: string;
+  type: 'color' | 'range' | 'text' | 'select';
+  defaultValue: string | number;
+  options?: string[];
+  min?: number;
+  max?: number;
+  step?: number;
+}
+
 export interface EffectItem {
   id: string;
   name: string;
@@ -6,6 +17,7 @@ export interface EffectItem {
   tailwindClasses: string;
   css?: string;
   reactCode?: string;
+  parameters?: EffectParameter[];
 }
 
 export const CATEGORIES = ['Tous', '✨ Nouveautés', 'UI Components', 'Interactions', 'Data Display', 'Feedback', 'Navigation'];
@@ -16,7 +28,14 @@ export const effectRegistry: EffectItem[] = [
     name: "Bouton Magnétique",
     description: "Bouton avec un effet de brillance continue et une ombre dynamique au survol.",
     category: "UI Components",
-    tailwindClasses: "relative overflow-hidden bg-black text-white px-8 py-4 rounded-2xl font-semibold shadow-lg transition-transform hover:scale-[1.02] border border-white/10 group",
+    parameters: [
+      { id: "bg_color", label: "Couleur de Fond", type: "color", defaultValue: "#000000" },
+      { id: "text_color", label: "Couleur du Texte", type: "color", defaultValue: "#ffffff" },
+      { id: "padding_x", label: "Padding Horizontal", type: "range", defaultValue: 8, min: 4, max: 16, step: 1 },
+      { id: "padding_y", label: "Padding Vertical", type: "range", defaultValue: 4, min: 2, max: 8, step: 1 },
+      { id: "border_radius", label: "Arrondi", type: "select", defaultValue: "2xl", options: ["md", "lg", "xl", "2xl", "3xl", "full"] }
+    ],
+    tailwindClasses: "relative overflow-hidden bg-[{{bg_color}}] text-[{{text_color}}] px-{{padding_x}} py-{{padding_y}} rounded-{{border_radius}} font-semibold shadow-lg transition-transform hover:scale-[1.02] border border-white/10 group shimmer-btn",
     css: `
       @keyframes shimmer {
         0% { transform: translateX(-100%); }
@@ -37,7 +56,7 @@ export const ShimmerButton = ({ children, onClick }) => {
   return (
     <button 
       onClick={onClick}
-      className="relative overflow-hidden bg-black text-white px-8 py-4 rounded-2xl font-semibold shadow-lg transition-transform hover:scale-[1.02] border border-white/10 group shimmer-btn"
+      className="relative overflow-hidden bg-[{{bg_color}}] text-[{{text_color}}] px-{{padding_x}} py-{{padding_y}} rounded-{{border_radius}} font-semibold shadow-lg transition-transform hover:scale-[1.02] border border-white/10 group shimmer-btn"
     >
       {children}
     </button>
@@ -51,7 +70,7 @@ export const ShimmerButton = ({ children, onClick }) => {
     name: "Carte Holographique",
     description: "Carte en verre dépoli avec bordure lumineuse et reflet asymétrique.",
     category: "Data Display",
-    tailwindClasses: "w-64 h-40 bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex items-center justify-center relative overflow-hidden",
+    tailwindClasses: "w-64 h-40 bg-white/5 backdrop-blur-xl border border-white/20 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] flex items-center justify-center relative overflow-hidden glass-card",
     css: `
       .glass-card::before {
         content: '';
@@ -81,7 +100,7 @@ export const GlassCard = ({ title, children }) => {
     name: "Grille Bento Asymétrique",
     description: "Structure de dashboard minimaliste inspirée du design Bento d'Apple.",
     category: "UI Components",
-    tailwindClasses: "grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-background w-full",
+    tailwindClasses: "grid grid-cols-1 md:grid-cols-3 gap-4 p-4 w-full",
     reactCode: `import React from 'react';
 
 export const BentoGrid = () => {
@@ -99,13 +118,17 @@ export const BentoGrid = () => {
     name: "Badge Statut Live",
     description: "Un indicateur de statut clignotant pour montrer l'activité en temps réel.",
     category: "Feedback",
+    parameters: [
+      { id: "dot_color", label: "Couleur du Point", type: "color", defaultValue: "#22c55e" },
+      { id: "text", label: "Texte du Badge", type: "text", defaultValue: "Système Opérationnel" }
+    ],
     tailwindClasses: "flex items-center gap-2 bg-white border border-black/10 px-3 py-1.5 rounded-full shadow-sm w-fit",
     reactCode: `import React from 'react';
 
-export const LiveBadge = ({ status = "Système Opérationnel" }) => {
+export const LiveBadge = ({ status = "{{text}}" }) => {
   return (
     <div className="flex items-center gap-2 bg-white border border-black/10 px-3 py-1.5 rounded-full shadow-sm w-fit">
-      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+      <div className="w-1.5 h-1.5 rounded-full bg-[{{dot_color}}] animate-pulse shadow-[0_0_8px_{{dot_color}}]"></div>
       <span className="font-mono text-[10px] text-dark/70 uppercase tracking-wider">{status}</span>
     </div>
   );
@@ -116,7 +139,11 @@ export const LiveBadge = ({ status = "Système Opérationnel" }) => {
     name: "Input Magnétique",
     description: "Champ de saisie qui réagit au focus avec une bordure néon et une ombre portée colorée.",
     category: "UI Components",
-    tailwindClasses: "w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm text-dark focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all shadow-sm",
+    parameters: [
+      { id: "glow_color", label: "Couleur du Halo", type: "select", defaultValue: "indigo-500", options: ["indigo-500", "purple-500", "rose-500", "emerald-500", "blue-500"] },
+      { id: "blur_amount", label: "Flou du Halo", type: "select", defaultValue: "xl", options: ["sm", "md", "lg", "xl", "2xl"] }
+    ],
+    tailwindClasses: "w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm text-dark focus:outline-none focus:border-[{{glow_color}}] focus:ring-4 focus:ring-[{{glow_color}}]/20 transition-all shadow-sm",
     reactCode: `import React, { useState } from 'react';
 
 export const MagneticInput = ({ placeholder }) => {
@@ -129,9 +156,9 @@ export const MagneticInput = ({ placeholder }) => {
         placeholder={placeholder}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm text-dark focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all shadow-sm relative z-10"
+        className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm text-dark focus:outline-none focus:border-{{glow_color}} focus:ring-4 focus:ring-{{glow_color}}/20 transition-all shadow-sm relative z-10"
       />
-      <div className={\`absolute inset-0 bg-indigo-500/20 blur-xl rounded-xl transition-opacity duration-300 \${isFocused ? 'opacity-100' : 'opacity-0'}\`}></div>
+      <div className={\`absolute inset-0 bg-{{glow_color}}/20 blur-{{blur_amount}} rounded-xl transition-opacity duration-300 \${isFocused ? 'opacity-100' : 'opacity-0'}\`}></div>
     </div>
   );
 };`
@@ -141,6 +168,11 @@ export const MagneticInput = ({ placeholder }) => {
     name: "Révélation Texte (GSAP)",
     description: "Animation d'apparition fluide des mots utilisant GSAP ScrollTrigger.",
     category: "Animations",
+    parameters: [
+      { id: "duration", label: "Durée (s)", type: "range", defaultValue: 0.8, min: 0.2, max: 2, step: 0.1 },
+      { id: "stagger", label: "Décalage (s)", type: "range", defaultValue: 0.05, min: 0.01, max: 0.2, step: 0.01 },
+      { id: "y_offset", label: "Décalage Y (px)", type: "range", defaultValue: 50, min: 10, max: 150, step: 10 }
+    ],
     tailwindClasses: "font-semibold text-3xl tracking-tight text-dark overflow-hidden flex flex-wrap gap-2",
     reactCode: `import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
@@ -155,11 +187,11 @@ export const TextReveal = ({ text }) => {
   useEffect(() => {
     let ctx = gsap.context(() => {
       gsap.fromTo('.word', 
-        { y: 50, opacity: 0 }, 
+        { y: {{y_offset}}, opacity: 0 }, 
         { 
           y: 0, opacity: 1, 
-          duration: 0.8, 
-          stagger: 0.05, 
+          duration: {{duration}}, 
+          stagger: {{stagger}}, 
           ease: 'power3.out',
           scrollTrigger: {
             trigger: containerRef.current,

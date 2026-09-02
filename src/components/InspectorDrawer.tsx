@@ -12,6 +12,7 @@ interface InspectorDrawerProps {
 export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({ effect, isOpen, onClose }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<'tailwind' | 'react'>('tailwind');
+  const [paramValues, setParamValues] = useState<Record<string, any>>({});
 
   useEffect(() => {
     let ctx = gsap.context(() => {
@@ -24,19 +25,42 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({ effect, isOpen
     return () => ctx.revert();
   }, [isOpen]);
 
-  // Reset tab when effect changes
+  // Reset tab and initialize params when effect changes
   useEffect(() => {
     setActiveTab('tailwind');
+    if (effect && effect.parameters) {
+      const initialParams: Record<string, any> = {};
+      effect.parameters.forEach(p => {
+        initialParams[p.id] = p.defaultValue;
+      });
+      setParamValues(initialParams);
+    } else {
+      setParamValues({});
+    }
   }, [effect]);
 
   if (!effect) return null;
 
+  const replaceTemplateVariables = (template: string, values: Record<string, any>) => {
+    return template.replace(/\{\{([^}]+)\}\}/g, (match, key) => {
+      return values[key] !== undefined ? values[key] : match;
+    });
+  };
+
+  const processedTailwind = replaceTemplateVariables(effect.tailwindClasses, paramValues);
+  const processedCss = effect.css ? replaceTemplateVariables(effect.css, paramValues) : '';
+  const processedReact = effect.reactCode ? replaceTemplateVariables(effect.reactCode, paramValues) : '';
+
   const handleCopy = () => {
-    const textToCopy = activeTab === 'react' && effect.reactCode 
-      ? effect.reactCode 
-      : effect.tailwindClasses + (effect.css ? '\n\n/* CSS */\n' + effect.css : '');
+    const textToCopy = activeTab === 'react' && processedReact 
+      ? processedReact 
+      : processedTailwind + (processedCss ? '\n\n/* CSS */\n' + processedCss : '');
     
     navigator.clipboard.writeText(textToCopy);
+  };
+
+  const handleParamChange = (id: string, value: any) => {
+    setParamValues(prev => ({ ...prev, [id]: value }));
   };
 
   return (
@@ -53,7 +77,7 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({ effect, isOpen
         <div className="p-5 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-2 text-white/80">
             <SlidersHorizontal className="w-4 h-4" />
-            <h2 className="font-semibold text-base">Inspecteur</h2>
+            <h2 className="font-semibold text-base">Panneau de Contrôle</h2>
           </div>
           <button 
             onClick={onClose}
@@ -71,6 +95,75 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({ effect, isOpen
             <h3 className="font-semibold text-2xl mb-2">{effect.name}</h3>
             <p className="text-white/60 text-sm leading-relaxed">{effect.description}</p>
           </div>
+
+          {/* Configuration Parameters UI */}
+          {effect.parameters && effect.parameters.length > 0 && (
+            <div className="mb-8 p-5 bg-surface rounded-xl border border-white/5 shadow-inner">
+              <h4 className="font-medium text-sm text-white/90 mb-4 flex items-center gap-2">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-accent" /> Variables Personnalisées
+              </h4>
+              <div className="space-y-4">
+                {effect.parameters.map((param) => (
+                  <div key={param.id} className="flex flex-col gap-1.5">
+                    <label className="text-xs text-white/60">{param.label}</label>
+                    
+                    {param.type === 'color' && (
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="color" 
+                          value={paramValues[param.id] || '#000000'} 
+                          onChange={(e) => handleParamChange(param.id, e.target.value)}
+                          className="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent"
+                        />
+                        <input 
+                          type="text" 
+                          value={paramValues[param.id] || ''}
+                          onChange={(e) => handleParamChange(param.id, e.target.value)}
+                          className="bg-[#101012] border border-white/10 rounded px-2 py-1 text-xs text-white w-24 focus:outline-none focus:border-accent"
+                        />
+                      </div>
+                    )}
+
+                    {param.type === 'range' && (
+                      <div className="flex items-center gap-3">
+                        <input 
+                          type="range" 
+                          min={param.min} 
+                          max={param.max} 
+                          step={param.step}
+                          value={paramValues[param.id] || 0}
+                          onChange={(e) => handleParamChange(param.id, parseFloat(e.target.value))}
+                          className="flex-1 accent-accent h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <span className="text-xs font-mono text-accent w-8 text-right">{paramValues[param.id]}</span>
+                      </div>
+                    )}
+
+                    {param.type === 'text' && (
+                      <input 
+                        type="text" 
+                        value={paramValues[param.id] || ''}
+                        onChange={(e) => handleParamChange(param.id, e.target.value)}
+                        className="bg-[#101012] border border-white/10 rounded px-3 py-1.5 text-xs text-white w-full focus:outline-none focus:border-accent"
+                      />
+                    )}
+
+                    {param.type === 'select' && param.options && (
+                      <select 
+                        value={paramValues[param.id] || ''}
+                        onChange={(e) => handleParamChange(param.id, e.target.value)}
+                        className="bg-[#101012] border border-white/10 rounded px-3 py-1.5 text-xs text-white w-full focus:outline-none focus:border-accent appearance-none cursor-pointer"
+                      >
+                        {param.options.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {effect.reactCode && (
             <div className="flex p-1 bg-surface rounded-xl border border-white/5 mb-6">
@@ -95,7 +188,7 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({ effect, isOpen
                 <div>
                   <label className="block font-medium text-xs text-white/40 mb-2 uppercase tracking-wider">Tailwind Classes</label>
                   <div className="bg-[#101012] text-white/90 p-4 rounded-xl border border-white/5 font-mono text-[12px] leading-relaxed overflow-x-auto shadow-inner whitespace-pre-wrap">
-                    {effect.tailwindClasses}
+                    {processedTailwind}
                   </div>
                 </div>
                 
@@ -103,16 +196,16 @@ export const InspectorDrawer: React.FC<InspectorDrawerProps> = ({ effect, isOpen
                   <div>
                     <label className="block font-medium text-xs text-white/40 mb-2 uppercase tracking-wider">Custom CSS</label>
                     <div className="bg-[#101012] text-white/90 p-4 rounded-xl border border-white/5 font-mono text-[12px] leading-relaxed overflow-x-auto shadow-inner whitespace-pre-wrap">
-                      {effect.css}
+                      {processedCss}
                     </div>
                   </div>
                 )}
               </>
             ) : (
               <div>
-                <label className="block font-medium text-xs text-white/40 mb-2 uppercase tracking-wider">Composant React</label>
+                <label className="block font-medium text-xs text-white/40 mb-2 uppercase tracking-wider">Composant React généré</label>
                 <div className="bg-[#101012] text-white/90 p-4 rounded-xl border border-white/5 font-mono text-[12px] leading-relaxed overflow-x-auto shadow-inner whitespace-pre">
-                  {effect.reactCode}
+                  {processedReact}
                 </div>
               </div>
             )}
