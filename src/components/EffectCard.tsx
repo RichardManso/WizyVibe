@@ -25,7 +25,7 @@ export const EffectCard: React.FC<EffectCardProps> = ({ effect, onCopy, onInspec
         <div className="w-full h-full flex items-center justify-center relative">
           <div className="absolute inset-0 bg-grid-dark opacity-30 pointer-events-none"></div>
           
-          <div className={`${effect.tailwindClasses.replace('rounded-[2rem]', 'rounded-2xl')} ${effect.id === 'shimmer-button' ? 'shimmer-btn' : ''} max-w-full max-h-full relative z-10`}>
+          <div className={`${effect.tailwindClasses.replace(/\{\{.*?\}\}/g, '').replace('rounded-[2rem]', 'rounded-2xl')} ${effect.id === 'shimmer-button' ? 'shimmer-btn' : ''} max-w-full max-h-full relative z-10`}>
             {effect.id === 'bento-asymmetric' ? (
               <>
                 <div className="bg-white/10 rounded-lg h-20 border border-white/5"></div>
@@ -36,6 +36,16 @@ export const EffectCard: React.FC<EffectCardProps> = ({ effect, onCopy, onInspec
               'Survolez-moi'
             ) : effect.id === 'glassmorphism' ? (
               <div className="text-white font-medium text-sm">Glassmorphism</div>
+            ) : effect.id === 'live-badge' ? (
+              <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div><span className="text-white text-xs font-mono">LIVE</span></div>
+            ) : effect.id === 'magnetic-input' ? (
+              <div className="w-48 h-10 border border-white/20 rounded-xl bg-white/5 flex items-center px-4"><span className="text-white/30 text-xs">Search...</span></div>
+            ) : effect.id === 'gsap-text-reveal' ? (
+              <div className="font-bold text-white text-xl uppercase tracking-widest">GSAP TEXT</div>
+            ) : effect.id === 'spotlight-card' ? (
+              <div className="w-40 h-32 border border-purple-500/30 rounded-2xl flex items-center justify-center bg-black/50 shadow-[0_0_30px_rgba(168,85,247,0.2)]"><span className="text-purple-400/80 text-xs font-mono">Spotlight</span></div>
+            ) : effect.id === 'cyberpunk-glitch' ? (
+              <span className="text-white font-bold tracking-widest text-sm text-red-500 bg-black px-4 py-2 border-l-2 border-r-2 border-cyan-400">OVERRIDE</span>
             ) : (
               <div className="w-20 h-20 bg-white/10 rounded-xl border border-white/5"></div>
             )}

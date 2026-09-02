@@ -216,5 +216,162 @@ export const TextReveal = ({ text }) => {
     </h2>
   );
 };`
+  },
+  {
+    id: "spotlight-card",
+    name: "Carte Spotlight (Suivi Souris)",
+    description: "Une carte interactive qui éclaire ses bordures et son fond en suivant la position de la souris de l'utilisateur, créant un effet de lampe torche.",
+    category: "Interactions",
+    isPremium: true,
+    parameters: [
+      { id: "spotlight_color", label: "Couleur du Spotlight", type: "color", defaultValue: "#A855F7" },
+      { id: "bg_color", label: "Couleur de Fond (Base)", type: "color", defaultValue: "#151518" },
+      { id: "radius", label: "Taille du Spotlight (px)", type: "range", defaultValue: 300, min: 100, max: 600, step: 50 }
+    ],
+    tailwindClasses: "relative h-64 w-full rounded-2xl overflow-hidden bg-[{{bg_color}}] border border-white/10 group",
+    css: `
+      .spotlight-wrapper {
+        --mouse-x: 50%;
+        --mouse-y: 50%;
+      }
+      .spotlight-wrapper::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient({{radius}}px circle at var(--mouse-x) var(--mouse-y), {{spotlight_color}}20, transparent 40%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .spotlight-wrapper:hover::before {
+        opacity: 1;
+      }
+      .spotlight-wrapper::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        background: radial-gradient({{radius}}px circle at var(--mouse-x) var(--mouse-y), {{spotlight_color}}50, transparent 40%);
+        opacity: 0;
+        transition: opacity 0.3s;
+        z-index: -1;
+      }
+      .spotlight-wrapper:hover::after {
+        opacity: 1;
+      }
+    `,
+    reactCode: `import React, { useRef, useState } from 'react';
+
+export const SpotlightCard = ({ children }) => {
+  const divRef = useRef(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [opacity, setOpacity] = useState(0);
+
+  const handleMouseMove = (e) => {
+    if (!divRef.current) return;
+    const rect = divRef.current.getBoundingClientRect();
+    setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
+  return (
+    <div
+      ref={divRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setOpacity(1)}
+      onMouseLeave={() => setOpacity(0)}
+      className="relative h-64 w-full rounded-2xl bg-[{{bg_color}}] border border-white/10 overflow-hidden"
+    >
+      <div 
+        className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300"
+        style={{
+          opacity,
+          background: \`radial-gradient({{radius}}px circle at \${position.x}px \${position.y}px, {{spotlight_color}}50, transparent 40%)\`,
+        }}
+      />
+      <div 
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300"
+        style={{
+          opacity,
+          background: \`radial-gradient({{radius}}px circle at \${position.x}px \${position.y}px, {{spotlight_color}}20, transparent 40%)\`,
+        }}
+      />
+      <div className="relative z-10 p-8 h-full">
+        {children || <span className="text-white">Hover me!</span>}
+      </div>
+    </div>
+  );
+};`
+  },
+  {
+    id: "cyberpunk-glitch",
+    name: "Bouton Cyberpunk Glitch",
+    description: "Un bouton au style cyberpunk qui subit une distorsion (glitch) aléatoire au survol, avec un effet visuel brut.",
+    category: "Interactions",
+    isPremium: true,
+    parameters: [
+      { id: "primary_color", label: "Couleur Primaire", type: "color", defaultValue: "#ff003c" },
+      { id: "secondary_color", label: "Couleur Secondaire (Glitch)", type: "color", defaultValue: "#00e6f6" },
+      { id: "text", label: "Texte du Bouton", type: "text", defaultValue: "SYSTEM.OVERRIDE()" }
+    ],
+    tailwindClasses: "relative px-8 py-4 bg-[{{primary_color}}] text-white font-bold tracking-[0.2em] text-sm uppercase cursor-pointer transition-all duration-300 cyberpunk-glitch-btn border-none shadow-[0_0_15px_{{primary_color}}40]",
+    css: `
+      .cyberpunk-glitch-btn {
+        clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+      }
+      .cyberpunk-glitch-btn::before, 
+      .cyberpunk-glitch-btn::after {
+        content: "{{text}}";
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: {{primary_color}};
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+      }
+      .cyberpunk-glitch-btn::before {
+        left: 2px;
+        text-shadow: -1px 0 {{secondary_color}};
+        animation: glitch-anim-1 2s infinite linear alternate-reverse;
+      }
+      .cyberpunk-glitch-btn::after {
+        left: -2px;
+        text-shadow: -1px 0 #00ff00;
+        animation: glitch-anim-2 3s infinite linear alternate-reverse;
+      }
+      .cyberpunk-glitch-btn:hover::before,
+      .cyberpunk-glitch-btn:hover::after {
+        opacity: 1;
+      }
+      @keyframes glitch-anim-1 {
+        0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
+        20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+        40% { clip-path: inset(40% 0 50% 0); transform: translate(1px, 2px); }
+        60% { clip-path: inset(80% 0 5% 0); transform: translate(-1px, -2px); }
+        80% { clip-path: inset(10% 0 70% 0); transform: translate(2px, 1px); }
+        100% { clip-path: inset(30% 0 50% 0); transform: translate(-2px, -1px); }
+      }
+      @keyframes glitch-anim-2 {
+        0% { clip-path: inset(10% 0 60% 0); transform: translate(2px, 1px); }
+        20% { clip-path: inset(80% 0 5% 0); transform: translate(-2px, -2px); }
+        40% { clip-path: inset(30% 0 20% 0); transform: translate(2px, 2px); }
+        60% { clip-path: inset(70% 0 10% 0); transform: translate(-1px, -1px); }
+        80% { clip-path: inset(40% 0 50% 0); transform: translate(1px, 1px); }
+        100% { clip-path: inset(20% 0 30% 0); transform: translate(-2px, 2px); }
+      }
+    `,
+    reactCode: `import React from 'react';
+import './cyberpunk.css'; // Add the CSS keyframes here
+
+export const CyberpunkButton = ({ onClick }) => {
+  return (
+    <button 
+      onClick={onClick}
+      className="relative px-8 py-4 bg-[{{primary_color}}] text-white font-bold tracking-[0.2em] text-sm uppercase cursor-pointer transition-all duration-300 cyberpunk-glitch-btn border-none shadow-[0_0_15px_{{primary_color}}40]"
+    >
+      {{text}}
+    </button>
+  );
+};`
   }
 ];
